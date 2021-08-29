@@ -61,3 +61,18 @@ MyISAM适合查询以及插入为主的应用，InnoDB适合频繁修改以及�
 
 
 **聚集索引和非聚集索引区别**
+
+
+
+**主键约束和唯一约束的对比**
+
+唯一，非空，个数，组合列
+
+
+
+**TRUNCATE与DELETE的区别**
+
+* TRUNCATE用来清空整张表，效率高
+* 自增约束，TRUNCATE从1开始，DELETE继续往后
+* TRUNCATE不支持回滚
+* TRUNCATE后没有返回值，DELETE后返回受影响的函数

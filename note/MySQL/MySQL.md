@@ -15,49 +15,7 @@ B 树的一种变形，它是基于 B Tree 和叶子节点顺序访问指针进�
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+# 
 
 
 
@@ -89,7 +47,7 @@ datadir
 
 **远程访问授权**
 
-
+* 别名与原名
 
 
 
@@ -107,17 +65,15 @@ datadir
 
 
 
-登录
+设置root密码
 
 创建用户
 
-设置root密码
+登录
 
+登录命令的空格？
 
-
-空格？
-
-本地省略
+本地省略host
 
 docker
 
@@ -178,16 +134,6 @@ pid-file=/var/run/mysqld/mysqld.pid
 
   
 
-**查看MySQL版本**
-
-登录MySQL后使用select version();
-
-或者不登录，直接使用 mysql --version获得mysql -V
-
-
-
-DML
-
 
 
 ## **数据类型**
@@ -200,17 +146,332 @@ MySQL的数据类型大致分为三类：数值、日期/时间和字符串(字�
 
 
 
-## 数据库相关操作
+## 常用命令
 
 
 
-**创建数据量**
+**查看当前所在数据库**
+
+`select database()` 
+
+**性能**
 
 ```mysql
-CREATE DATABASE 数据库名;
+ SHOW TABLE STATUS [FROM db_name] [LIKE 'pattern'];
+```
+
+**服务器状态**
+
+```mysql
+show status;
+```
+
+**查看权限**
+
+```
+show grants;
+```
+
+**查看错误/警告日志**
+
+```
+show errors/warnings;
+```
+
+**查看MySQL版本**
+
+登录MySQL后使用select version();
+
+或者不登录，直接使用 mysql --version获得mysql -V
+
+
+
+# DQL
+
+**通配符查询**
+
+**正则表达式查询**
+
+## 基础查询
+
+
+
+**格式**
+
+```mysql
+SELECT column_name,column_name
+FROM table_name
 ```
 
 
+
+多表查询时，MySQL执行顺序
+
+
+
+**where**
+
+用来声明查询条件来限定行；可以通过AND、OR来组合条件。
+
+**计算次序**
+
+MySQL的计算次序是AND>OR,可以通过()改变优先级。
+
+**between**
+
+包括两端的值
+
+**in**
+
+与OR等价
+
+```
+where id in(值1,值2);
+```
+
+```
+where id=值1 OR id=值2;
+```
+
+当多个值时in更直观，而且**in速度一般要快**，常用来连接子查询。
+
+**空值检查**
+
+一个列不包含值时就是NULL，可以使用`IS NULL`判断。
+
+不为空且不是空字符串
+
+```
+where ISNULL(name)=0 and LENGTH(trim(name))>0;
+```
+
+**NOT**
+
+用于否定后面的条件
+
+**LIKE**
+
+| 通配符 | 描述               |
+| ------ | ------------------ |
+| %      | 任意字段出现任意次 |
+| _      | 单个字符           |
+
+**排序**
+
+order by，对查询结果(基础查询，分组查询，子查询，联结查询)进行排序
+
+通过order by,来指定一个或多个字段来进行排序
+
+```mysql
+order by 字段1 [desc], 字段2 [desc];
+```
+
+a和A的比较取决于数据库如何设置
+
+**limit**
+
+取前n行
+
+```mysql
+limit n;
+```
+
+从第n行开始的m行(第一行是1)
+
+```mysql
+limit n,m;
+```
+
+排序与limit组合使用来取最符合条件的n个。
+
+**destinct**
+
+* 必须放在开头
+* 一般用来和count来查询不重复的条数
+* 作用域后面的所有字段(即所有字段都相同才算重复)
+
+
+
+## 分组查询
+
+通过WHERE获得了相对小的表，然后按照指定的条件将这张表分成多个小表，计算每个小表中的汇总信息，每个小表返回一个汇总信息，最后这些汇总信息形成一张表。
+
+
+
+GROUP BY来分组
+
+* 可以按照多个字段进行分组
+* select的字段都必须是在group by中给出的
+* 如果分组有NULL，NULL也会作为一组
+* 支持别名
+
+**按表达式进行分组**
+
+
+
+**按多个条件进行筛选**
+
+
+
+**HIVING**
+
+where是在分组前对数据进行过滤，而HAVING是来过滤分组后的聚合数据
+
+
+
+## 子查询
+
+一个SELECT的查询结果用在另一个SQL语句中。用()将SELECT语句括起来，放到另一个SQL(不止SELECT语句)语句中
+
+
+
+**别名**
+
+```mysql
+column_name as alias
+```
+
+as可以省略
+
+
+
+**子查询的分类**
+
+* 一行一列
+* 一行多列
+* 多行多列
+
+**子查询可以的位置**
+
+* WHERE/HIVING后面
+* SELECT后
+* FROM
+* EXISTS(用来判断子查询有没有值)
+
+
+
+| 操作符    | 含义                           |
+| --------- | ------------------------------ |
+| IN/NOT IN | 符合IN中的都要/不要            |
+| ANY/SOME  | 符合ANY/SOME中任意一个值都可以 |
+| ALL       | 需要满足ALL中的所有值          |
+
+* ANY/SOME/ALL都可以替代，中文比较难理解，一般用的很少这三个。
+* IN后面的子查询，最好看看能不能DISTINCT
+
+
+
+```mysql
+SELECT *
+FROM employees
+WHERE id=(SELECT id FROM table_name)
+AND name=(SELETC name FROM table_name)
+
+```
+
+当多个子查询是查询的同一张表，条件也相同时，可以考虑合并一下
+
+```mysql
+SELECT *
+FROM employees
+WHERE (id,nam)=(
+    SELECT id,name FROM table_name
+)
+```
+
+
+
+
+
+## 联结
+
+联结是MySQL最强大的功能之一，多表查询，拿一张表去匹配另一张表。
+
+
+
+
+
+### **内联结**
+
+先做笛卡尔积，然后按照条件进行过滤
+
+**保证联结一定有where语句**
+
+起别名后就要使用别名，不能再使用原始的表名
+
+
+
+**等值联结**
+
+连接条件由`=`组成
+
+
+
+**非等值联结**
+
+连接条件不再由`=`连接
+
+比如根据薪水去联结员工等级表，薪水在某一区间的联结到某一等级
+
+
+
+**自联结**
+
+(等值联结)，一张表需要查询两次，就可以写成自联结
+
+
+
+大小表数据，where的对比
+
+
+
+
+
+### **外联结**
+
+
+
+**左(右)外联结**
+
+左连接：左边的表，不管等不能联结上右边的表，每一行都是需要的。右联结就是右边表的每一行都是需要的。
+
+```mysql
+SELECT *
+FROM table_name1 t1
+LEFT JOIN table_name2 t2
+ON 联结条件
+WHERE 过滤条件
+```
+
+
+
+**全外联结**
+
+MySQL不支持全外联结。
+
+
+
+
+
+### 交叉联接
+
+`CROSS JOIN`,与`FROM table1,table2`相同，取得笛卡尔积
+
+
+
+
+
+
+
+
+
+
+
+# DDL
+
+
+
+## 库的管理
 
 
 
@@ -234,37 +495,41 @@ CREATE DATABASE 数据库名;
 
 `use 数据库名`
 
-`select database()` 查看当前所在数据库
 
 
+**创建数据库**
+
+```mysql
+CREATE DATABASE [if not exists] database_name;
+```
+
+**查看建库语句**
+
+```mysql
+show create database database_name
+```
+
+**修改数据库**
+
+不太可能需要修改
+
+修改字符集
+
+```mysql
+ALTER DATABASE database_name CHARACTER SET utf8;
+```
 
 **删除数据库**
 
-```
-drop database <数据库名>;
-```
-
-
-
-
-
-**表相关操作**
-
-
-
-**创建数据表**
-
 ```mysql
-CREATE TABLE table_name (column_name column_type...)ENGINE=InnoDB DEFAULT CHARSET=utf8;;
+DROP DATABASE [id exists] database_name;
 ```
 
 
 
-**删除数据表**
 
-```mysql
-DROP TABLE table_name ;
-```
+
+## 表的管理
 
 
 
@@ -273,17 +538,6 @@ DROP TABLE table_name ;
 `show tables` 查看当前数据库中都有哪些表
 
 `show table from 数据库名` 查看指定数据库中有哪些表
-
-
-
-**插入数据**
-
-```mysql
-INSERT INTO 
-table_name ( field1, field2,...fieldN )
-VALUES
-( value1, value2,...valueN );
-```
 
 
 
@@ -309,10 +563,168 @@ show index from 表名
 
 
 
-**性能**
+**创建表**
 
 ```mysql
- SHOW TABLE STATUS [FROM db_name] [LIKE 'pattern'];
+CREATE TABLE table_name(
+	列名 类型 约束 备注,
+    ...
+);
+```
+
+**查看建表语句**
+
+```mysql
+show create database table_name
+```
+
+**修改表**
+
+可以修改：
+
+* 列名
+* 表名
+* 类型
+* 约束
+* 添加列
+
+
+
+**修改列**
+
+```mysql
+ALTER TABLE table_name CHANGE COLUMN 旧列名 [新列名] 类型 [约束];
+```
+
+**添加列**
+
+```mysql
+ALTER TABLE table_name ADD COLUMN 旧列名 [新列名] 类型 [约束];
+```
+
+**删除列**
+
+```mysql
+ALTER TABLE table_name DROP COLUMN 旧列名 [新列名] 类型 [约束];
+```
+
+**修改表名**
+
+```mysql
+ALTE TABLE table_name RENAME TO new_table_name;
+```
+
+**删除表**
+
+```mysql
+DROP TABLE [if exists] table_name;
+```
+
+**复制表结构**
+
+```mysql
+CREATE TABLE table_name1 like table_name2
+```
+
+**复制表结构+数据**
+
+```mysql
+CREATE TABLE table_name1
+SELECT * FROM table_name2;
+```
+
+* 复制部分表结构/数据，可以加WHERE
+
+
+
+### **约束**
+
+用于限制字段，保证表中数据的完整性和可靠性
+
+
+
+**六大约束**
+
+* 非空约束
+* 默认约束(自动填充默认值)
+* 唯一约束(允许有一个NULL)
+* 主键约束
+* 外键约束(用于限制两个表的关系，该值必须是另一个表的主键/唯一键)
+* check约束(MySQL不支持，是对数据类型，范围等约束  )
+
+
+
+**创建约束**
+
+分为列级约束和表级约束
+
+* 列级约束定义外键无效
+* 表级约束不支持非空和默认
+
+
+
+**添加列级约束**
+
+```mysql
+CREATE TABLE table_name(
+	column_name type 约束 备注,
+    ...
+)
+```
+
+
+
+**添加表级约束**
+
+```mysql
+CREATE TABLE table_name(
+    ... ,
+    CONSTRAINT pk PRIMARY KEY (id),# 主键
+    CONSTRAINT uq UNIQUE(account),# 唯一约束
+    CONSTRAINT fk_主表_外表 FOREIGN KEY (edit_id) REFERENCES 表名(字段)
+)
+```
+
+* `CONSTRAINT 约束名` 可以省略
+* 一般只在表级约束中添加外键约束，其他约束在列级约束中定义
+* 可以添加多个约束
+
+
+
+**修改表的时候添加约束**
+
+列级约束
+
+```mysql
+ALERT TABLE table_name MODIFY COLUNM colunm_name 类型 约束
+```
+
+表级约束
+
+```mysql
+ALERT TABLE table_name [CONSTRSINT name] ADD PRIMARY KE(id)
+```
+
+
+
+**修改表的时候删除约束**
+
+
+
+```mysql
+ALERT TABLE table_name MODIFY COLUNM colunm_name
+```
+
+
+
+```mysql
+ALERT TABLE table_name DROP PRIMARY KEY
+```
+
+
+
+```mysql
+ALERT TABLE table_name DROP INDEX index_name;
 ```
 
 
@@ -321,150 +733,167 @@ show index from 表名
 
 
 
+## 插入
 
 
 
+* 支持批量插入
 
-# DQL
-
-
-
-**查询语句的格式**
+* 支持子查询
 
 ```mysql
-SELECT column_name,column_name
-FROM table_name1[,table_name1...]
-[WHERE Clause]
-[LIMIT N][ OFFSET M]
+INSERT INTO table_name (filed1_name,...) VALUES(value1,...),(...);
 ```
 
+插入的值的顺序与指定的列名顺序和个数相同
 
 
-**别名**
 
 ```mysql
-column_name as alias
+INSERT INTO table_name VALUES(value1,...),(...);
 ```
 
-as可以省略
+插入的值的顺序表中所有列名顺序和个数相同
 
 
 
-多表查询时，MySQL执行顺序
+## 修改
 
 
 
-**where**
-
-用来声明查询条件来限定行；可以通过AND、OR来组合条件。
-
-*计算次序*
-
-MySQL的计算次序是AND>OR,可以通过()改变优先级。
-
-
-
-**between**
-
-包括两端的值
-
-
-
-**in**
-
-与OR等价
-
-```
-where id in(值1,值2);
-```
-
-```
-where id=值1 OR id=值2;
-```
-
-当多个值时in更直观，而且in速度一般要快，常用来连接子查询。
-
-
-
-
-
-**空值检查**
-
-一个列不包含值时就是NULL，可以使用`IS NULL`判断。
-
-不为空且不是空字符串
-
-```
-where ISNULL(name)=0 and LENGTH(trim(name))>0;
-```
-
-
-
-**NOT**
-
-
-
-**通配符查询**
-
-
-
-**LIKE**
-
-| 通配符 | 描述               |
-| ------ | ------------------ |
-| %      | 任意字段出现任意次 |
-| _      | 单个字符           |
-|        |                    |
-
-
-
-
-
-**排序**
-
-order by
-
-通过order by,来指定一个或多个字段来进行排序
+**单表更新**
 
 ```mysql
-order by 字段1 [desc], 字段2 [desc];
+UPDATE table_name
+SET column_name1=new_value,column_name2=new _value...
+[WHERE ...]
 ```
 
-a和A的比较取决于数据库如何设置
 
 
-
-**limit**
-
-取前n行
+级联更新(只支持内联结)
 
 ```mysql
-limit n;
+UPDATE table_name1,table_name2
+SET ...
+WHERE 联结条件 AND 筛选条件
 ```
 
-从第n行开始的m行(第一行是1)
+
+
+## 删除
+
+
 
 ```mysql
-limit n,m;
+DELETE FROM table_name
+where ...;
 ```
 
-排序与limit组合使用来取最符合条件的n个。
+
+
+**删除整个表**
+
+```mysql
+TRUNCATE table table_name
+```
+
+
+
+**级联删除**
+
+```mysql
+DELETE table_name
+FROM table1,table2
+WHERE 联结条件
+AND 筛选条件
+```
+
+* DELETE后加要删除的表，两张表都需要删除时就都写上
 
 
 
 
 
-destinct
+# TCL
 
-**作用范围？**
+Transaction Control Language
 
-select distinct (字段名)表示指定字段不能相同
-
-
+一组SQL语句组成一个单元，要么全执行，要么全失败(即失败的时候不能对数据库产生影响)。
 
 
 
-**正则表达式查询**
+## 事务
+
+
+
+有些操作必须是原子性的，要成功都成功，要失败都失败，保证数据库的完整性。
+
+**事务的四个特性**：
+
+* 原子性 
+* 一致性
+* 隔离性
+* 持久性
+
+
+
+**隐式事务**
+
+INSERT、DELETE，UPDATE、SELECT都是隐式的事务，默认开启了自动提交。
+
+
+
+**显示事务**
+
+1. 关闭自动提交`SET AUTOCOMMIT=0`（只是关闭了当前会话的自动提交）
+
+2. 开启事务`start transaction` （可选的）
+3. 执行SQL语句
+4. 提交/回滚事务。COMMIT/ROLLBACK
+
+
+
+**事务的隔离级别**
+
+当多个事务同时使用数据库中相同的数据时，就可能会相互影响。
+
+***脏读***
+
+事务T1读取到了事务T2还为提交的数据，当T2回滚时，T1读到的数据就是错误的
+
+***不可重读***
+
+不能重复读，重复读取到的两个值不一样。两个事务T1,T2,T1读取了一个字段的值，T2修改了该字段的值，T1再次读取该字段的值，会造成前后两个值不一致。
+
+***幻读***
+
+T1读取表中的字段进行统计，T2新增了记录并提交了事务，当T1在读取时就会多出来几行。与不可重读类似，不可重读时值变了，前后读取的值不相同。幻读时有新纪录插入，前后读取到的数量不同。
+
+可以设置事务的隔离级别来解决这几个现象
+
+MySQL支持四种隔离级别
+
+`select  @@tx_isolation;`查看隔离级别	
+
+| 级别       | 描述                               |
+| ---------- | ---------------------------------- |
+| 读取未提交 | 会导致读取未提交、不可重复读和幻读 |
+| 读取已提交 | 会导致不可重读和幻读               |
+| 可重复读   | MySQL默认的，会导致幻读            |
+| 串行化     | 可以避免三个问题，但性能低         |
+
+设置隔离级别
+
+
+
+回滚点
+
+SAVEPOINT
+
+ROLLBACK TO 
+
+
 
 
 
@@ -500,15 +929,72 @@ select distinct (字段名)表示指定字段不能相同
 
 
 
-函数的移植行不强，不赞成使用函数
+函数的移植行不强，不赞成使用函数。
 
 
 
+**字符函数**
+
+| 函数名        | 描述                                                 |
+| ------------- | ---------------------------------------------------- |
+| length()      | 获取字节个数                                         |
+| concat()      | 多个字符串拼接成一个                                 |
+| upper()/lower | 统一大小写                                           |
+| substr()      | 多个重载，用法和Java一样(字符的长度)                 |
+| instar()      | 等效于Java的indexOf，没找到返回0                     |
+| trim()        | 默认去除空格,  trim('a' from 'absba')表示去除前后的a |
+| lpad() rpad   | 添加n个前缀/后缀                                     |
+| replace()     | 替换                                                 |
 
 
-# 聚合函数
+
+SQL中的索引都是从1开始的
 
 
+
+**数学函数**
+
+| 函数       | 描述                                   |
+| ---------- | -------------------------------------- |
+| round()    | 四舍五入默认保留整数，可以指定小鼠位数 |
+| cell()     | 向上取整                               |
+| f'loor()   | 向下取整                               |
+| truncate() | 截取                                   |
+| mod        | 取余                                   |
+
+取余
+
+a%b=a-a/b*b
+
+
+
+**日期函数**
+
+| 函数        | 描述                             |
+| ----------- | -------------------------------- |
+| NOW()       | 返回日期时间                     |
+| CURDATE()   | 返回日期                         |
+| CURTIME()   | 返回时间                         |
+| YEAR()      | 获得日期中的年，传入带日期的参数 |
+| MONTH()     | 月                               |
+| DAY()       | 日，时分秒相同                   |
+| STR_TO_DATE |                                  |
+| DATE_TO_STR |                                  |
+| DATEDIFF    |                                  |
+
+
+
+**其他函数**
+
+| 方法       | 描述 |
+| ---------- | ---- |
+| version()  |      |
+| database() |      |
+| user()     |      |
+
+
+
+**聚合函数**
 
 有时我们只需要统计信息而不是具体的数据。
 
@@ -520,145 +1006,25 @@ select distinct (字段名)表示指定字段不能相同
 | MIN()    | 最小值 |
 | SUN()    | 总和   |
 
-**COUNT(*) 与COUNT(列名)的区别**
+聚合函数都会忽略NULL，所以在WHERE时注意去掉NULL值
 
-COUNT(*)中包含NULL，COUNT(列名)不包含
+聚合函数可以和IDSTINCT连用
 
-使用聚合函数是，可以与distinct两用
+SUM(distinct 字段名)表示值不相同的和
 
-```
-SUM(distinct num)
-```
+**COUNT**
 
-表示不想同的num之和
+COUNT(column_name)
 
+COUNT(*),用来统计表的行数(不管是不是NULL)
 
+COUNT(随便一个数字或字符) 相当于在表中加了一列，这一列每行都是这个数字或字符，最后统计数字或字符的个数
 
-# 分组查询
+效率问题：
 
-GROUP BY来分组
+MYISAM，内部有计数器，COUNT(*)可以直接获得表的列数
 
-* 可以按照多个字段进行分组
-* select的字段都必须是在group by中给出的
-* 如果分组有NULL，NULL也会作为一组
-
-
-
-**分组过滤**
-
-用来排除一些分组
-
-HAVING来过滤分组
-
-
-
-**分组排序**
-
-
-
-# 子查询
-
-一个查询的结果可以作为另一个查询的条件，执行顺序是先执行内部的查询
-
-
-
-# 联结
-
-联结是MySQL最强大的功能之一
-
-
-
-# 主键和外键
-
-
-
-外键是另一张表的主键，用来表示两张表之间的关系
-
-定义主外键来实现引用的合法性。
-
-先做笛卡尔积，然后按照条件进行过滤
-
-**保证联结一定有where语句**
-
-
-
-**内联结**
-
-INNER JOIN(等值联结)
-
-
-
-大小表数据，where的对比
-
-
-
-
-
-**自联结**
-
-
-
-**外联结**
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# DDL
-
-
-
-
-
-## 服务器相关命令
-
-
-
-**服务器状态**
-
-```mysql
-show status;
-```
-
-
-
-查看建表语句
-
-```
-show create table table_name
-```
-
-查看建库语句
-
-```
-show create database database_name
-```
-
-查看权限
-
-```
-show grants;
-```
-
-查看错误/警告日志
-
-```
-show errors/warnings;
-```
-
-
+INNODA，COUNT(*)和COUNT(1)相差不大，但比COUNT(colunm_name)效率高(多了IS NULL判断)
 
 
 
@@ -686,9 +1052,7 @@ MySQL打包了三个引擎，具有不同的使用场景。
 
 支持全文索引，不支持事务。
 
-
-
-
+SHOW ENGIENS;
 
 
 
@@ -706,7 +1070,7 @@ MySQL打包了三个引擎，具有不同的使用场景。
 
 
 
-## B Tree 
+**B Tree** 
 
 
 
@@ -744,7 +1108,7 @@ Balance Tree，平衡树是一颗查找树，并且所有叶子节点位于同�
 
 
 
-## B+ Tree
+**B+ Tree**
 
 
 
@@ -789,23 +1153,6 @@ Balance Tree，平衡树是一颗查找树，并且所有叶子节点位于同�
 
 
 
-
-# 事务
-
-
-
-有些操作必须是原子性的，要成功都成功，要失败都失败，保证数据库的完整性。
-
-事务的四个特性：
-
-* 原子性 就是把一个事务中的所有操作当成一个操作(原子)，这个操作要么都执行成功，要么失败时回滚
-* 一致性
-* 隔离性
-* 持久性
-
-
-
-事务的隔离级别
 
 
 
