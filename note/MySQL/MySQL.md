@@ -165,6 +165,8 @@ MySQL的数据类型大致分为三类：数值、日期/时间和字符串(字�
 
 [MySQL数据类型参考](https://www.runoob.com/mysql/mysql-data-types.html)
 
+bigdecimal
+
 
 
 ## 常用命令
