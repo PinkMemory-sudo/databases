@@ -466,3 +466,59 @@ upserter
 
 
 # 与SpringBoot集成
+
+
+
+1. 添加JDBC驱动和MyBatis的依赖
+
+
+
+2. 配置文件
+
+```properties
+spring.datasource.url=jdbc:mysql://x.x.x:8585/intention?useUnicode=true&characterEncoding=UTF-8
+spring.datasource.username=***
+spring.datasource.password=***
+# 指定Mapper文件的位置
+mybatis.mapper-locations=classpath:mapper/*Mapper.xml
+# 开启下划线与驼峰的自动转换
+mybatis.configuration.map-underscore-to-camel-case=true
+# 查看sql的执行
+logging.level.com.pk.mybatis.dao.mapper=debug
+```
+
+3. **@MapperScan**
+
+配置文件中指定了mapper文件的位置，还需要在启动类上添加@Mapper指定接口的位置。程序启动时，会去指定路径下寻找@Mapper修饰的接口，结合Mapper文件生成代理对象。
+
+```java
+@MapperScan("com.pk.mybatis.dao")
+```
+
+4. **@Mapper**
+
+加在接口上，标记它是一个mapper接口
+
+5. 然后就是在接口中定义方法，mapper映射文件中写SQL语句和ORM映射
+
+
+
+# ？
+
+配置数据库连接池
+
+事务
+
+什么情况下需要使用resultType
+
+自动映射的级别和两种方式
+
+
+
+# Exception
+
+
+
+一对多映射时出现**TooManyResultsException**
+
+检查resultMap与select的返回的字段是否能映射上，id标签是一定要写的。
