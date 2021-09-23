@@ -201,16 +201,6 @@ show tables/collections
 
 
 
-
-
-查看详情不再按照任务聚合，直接分页展示给该账户推送过的全部人员
-
-参考文档：http://wiki.baidu.com/pages/viewpage.action?pageId=1534119114
-
-
-
-
-
 # CRUD
 
 
