@@ -22,13 +22,54 @@ Redis序列化
 
 
 
-# Redis Driver
-
 
 
 Java使用的两个Redis客户端：Lettuce，Jedis
 
 ## Lettuce
+
+
+
+Lettuce is a Netty-based open-source connector
+
+添加maven依赖
+
+```xml
+<dependencies>
+
+  <!-- other dependency elements omitted -->
+
+  <dependency>
+    <groupId>io.lettuce</groupId>
+    <artifactId>lettuce-core</artifactId>
+    <version>6.1.5.RELEASE</version>
+  </dependency>
+
+</dependencies>
+```
+
+**配置luttuce**
+
+```java
+@Configuration
+class WriteToMasterReadFromReplicaConfiguration {
+
+  @Bean
+  public LettuceConnectionFactory redisConnectionFactory() {
+
+    LettuceClientConfiguration clientConfig = LettuceClientConfiguration.builder()
+      // 写master读replica
+      .readFrom(REPLICA_PREFERRED)
+      .build();
+
+    RedisStandaloneConfiguration serverConfig = new RedisStandaloneConfiguration("server", 6379);
+
+    return new LettuceConnectionFactory(serverConfig, clientConfig);
+  }
+}
+```
+
+
 
 ```java
 @Test
@@ -44,11 +85,76 @@ void contextLoads() {
 
 
 
-Jedis
+## Jedis
 
 
 
-## 连接redis
+**添加jedis依赖**
+
+```xml
+<dependencies>
+
+  <!-- other dependency elements omitted -->
+
+  <dependency>
+    <groupId>redis.clients</groupId>
+    <artifactId>jedis</artifactId>
+    <version>3.6.3</version>
+  </dependency>
+
+</dependencies>
+```
+
+**添加配置**
+
+```java
+@Configuration
+class RedisConfiguration {
+
+  @Bean
+  public JedisConnectionFactory redisConnectionFactory() {
+
+    RedisStandaloneConfiguration config = new RedisStandaloneConfiguration("server", 6379);
+    return new JedisConnectionFactory(config);
+  }
+}
+```
+
+
+
+
+
+### Sentinel
+
+```java
+/**
+ * Jedis
+ */
+@Bean
+public RedisConnectionFactory jedisConnectionFactory() {
+  RedisSentinelConfiguration sentinelConfig = new RedisSentinelConfiguration()
+  .master("mymaster")
+  .sentinel("127.0.0.1", 26379)
+  .sentinel("127.0.0.1", 26380);
+  return new JedisConnectionFactory(sentinelConfig);
+}
+
+/**
+ * Lettuce
+ */
+@Bean
+public RedisConnectionFactory lettuceConnectionFactory() {
+  RedisSentinelConfiguration sentinelConfig = new RedisSentinelConfiguration()
+  .master("mymaster")
+  .sentinel("127.0.0.1", 26379)
+  .sentinel("127.0.0.1", 26380);
+  return new LettuceConnectionFactory(sentinelConfig);
+}
+```
+
+
+
+
 
 无论选择哪个客户端，只需要使用一组Spring Data Redis API（在所有连接器上都保持一致）：org.springframework.data.redis.connection包及其RedisConnection和RedisConnectionFactory接口即可使用和检索 与Redis的活动连接。
 
@@ -68,17 +174,25 @@ RestTemplate是线程安全的，可以被多个实例使用。
 
 
 
-RestTemplate的大多数操作使用的都是ava-based serializer，所以读写对象的操作都通过Java进行序列化和反序列化。
+**序列化**
 
-`org.springframework.data.redis.serializer`中提供了许多其他的序列化器，可以更改。
+RedisTemplate 的大多数操作都要 java 的序列化，所以redis的多有读写操作需要经过Java的序列化和反序列化。
 
-也可以将enableDefaultSerializer属性设置为false，使序列化器置为null，使用原始的字节数组。
+可以更改RedisTemplate的序列化配置
+
+* `org.springframework.data.redis.serializer`中提供了许多其他的序列化器，JdkSerializationRedisSerializer，默认用于 RedisCache 和 RedisTemplate；StringRedisSerializer
+
+* 还可以将任何序列化器设置为 null，并通过将 enableDefaultSerializer 属性设置为 false 来使用带有原始字节数组的 RedisTemplate
 
 
 
-因为Redis中key和value的常见类型都是String。SpringDataRedis提供了两个扩展RedisConnection和RedisTemplate。
+因为Redis中key和value的常见类型都是String。SpringDataRedis提供了两个扩展RedisConnection和RedisTemplate用来进行String的操作。
 
-RedisTemplate和StringRedisTemplate允许您通过RedisCallback接口直接与Redis对话。
+
+
+RedisCallback
+
+
 
 
 
@@ -190,7 +304,18 @@ opsForValue
 
 
 
-## 配置
+SpringDataRedis需要redis2.6及以上，集成了lettuce和jedis两个redis的Java开源库
+
+
+
+**添加依赖**
+
+```xml
+```
+
+
+
+**配置**
 
 
 
@@ -213,7 +338,7 @@ spring:
 
 
 
-配置类：配置RedisTemplate
+**配置RedisTemplate**
 
 
 
