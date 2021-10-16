@@ -495,6 +495,88 @@ db.inventory.updateOne(
 
 
 
+## 内嵌与关联
+
+对于一对一的关系，Mongo可以内嵌文档，对于一对多的关系，Mongo可以内嵌数组。
+
+
+
+
+
+**关联**
+
+我们可以通过两次查询将两个文档手动关联起来，Mongo提供了DBRef，不用再手动查两次。
+
+
+
+### DBRef
+
+DBRef就是在两个Collection之间定义的一个关联关系，比如，把CollectionB "_id"列的值存在CollectionA的一个列中，然后通过CollectionA这个列中所存的值在CollectionB中找到相应的记录。
+
+```
+field:{ $ref : <value>, $id : <value>, $db : <value> }
+```
+
+`"userExInfo" : DBRef("user_ex_info", "BiJieQXGFJ")`
+
+关联插入，删除，修改
+
+
+
+```bash
+> db.people.find().pretty()
+{
+	"_id" : ObjectId("6167e6b70557fc9ca56bffc9"),
+	"name" : "Sky",
+	"age" : "20",
+	"dep" : "CSL"
+}
+{
+	"_id" : ObjectId("6167e6ba0557fc9ca56bffca"),
+	"name" : "Bill",
+	"age" : "22",
+	"dep" : "CSL"
+}
+> db.deps.find().pretty()
+{
+	"_id" : ObjectId("6167e6c00557fc9ca56bffcb"),
+	"name" : "CSL",
+	"num" : 15,
+	"people" : [
+		DBRef("people", ObjectId("6167e6b70557fc9ca56bffc9"), "dbref_test"),
+		DBRef("people", ObjectId("6167e6ba0557fc9ca56bffca"), "dbref_test")
+	]
+}
+```
+
+可以直接用引用的文档中的数据，把它当成内嵌的文档使用
+
+```bash
+> db.deps.findOne({"name": "CSL"}).people[0].fetch()
+{
+	"_id" : ObjectId("6167e6b70557fc9ca56bffc9"),
+	"name" : "Sky",
+	"age" : "20",
+	"dep" : "CSL"
+}
+```
+
+
+
+
+
+
+
+### Lookup
+
+MongoDB 3.2引入
+
+
+
+
+
+
+
 
 
 # 集群
