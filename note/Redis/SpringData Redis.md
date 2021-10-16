@@ -326,8 +326,8 @@ SpringDataRedis需要redis2.6及以上，集成了lettuce和jedis两个redis的J
 spring:
   redis:
     port: 6379
-    password: Xxf159357!_
-    host: 182.92.236.141
+    password: xxx
+    host: xxx
     lettuce:
       pool:
         max-active: 100 # 连接池最大连接数（使用负值表示没有限制） 太小可能出现connection.PoolExcelption
