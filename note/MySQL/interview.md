@@ -12,6 +12,15 @@
 
 **MyISAM和InnoDB的区别**
 
+
+
+|        | 事务                     | 外键                     | 行级锁                   | MVCC                     |
+| ------ | ------------------------ | ------------------------ | ------------------------ | ------------------------ |
+| MyISAM | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_multiplication_x: |
+| InnoDB | :heavy_check_mark:       | :heavy_check_mark:       | :heavy_check_mark:       | :heavy_check_mark:       |
+
+
+
 * 5.5版本后默认的存储引擎为InnoDB，之前是MyISAM
 * 事务：MyISAM不支持事务
 * 锁：MyISAM不支持行级锁，只支持表级锁，InnoDB默认行级锁
