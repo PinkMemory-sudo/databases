@@ -1,6 +1,6 @@
 
 
-安装
+# 安装
 
 
 
@@ -16,19 +16,14 @@ docker pull redis:5.0.7
 
 
 
+```bash
+docker run -p 6379:6379 --name redis \
+-v /home/chenguanlin/redis/conf/redis.conf:/etc/redis/redis.conf \
+-v /home/chenguanlin/redis/data:/data -d 7eed8df88d3b \
+redis-server /etc/redis/redis.conf --appendonly yes
 ```
-docker run -p 6379:6379 --name redis -v /Users/chenguanlin/Documents/workspace/redis/conf/reids.conf:/etc/redis/redis.conf -v /Users/chenguanlin/Documents/workspace/redis/data:/data -d 7eed8df88d3b redis-server /etc/redis/redis.conf --appendonly yes
-```
 
-
-
-
-
-
-
-
-
-
+* 注意，提前在本地创建好配置文件
 
 
 
@@ -97,9 +92,9 @@ Redis支持多个数据库，并且每个数据库的数据是隔离的不能共
 
 **获得所有配置项**
 
-`CONFIG GET *`
+`CONFIG GET ` xxx
 
-通过redis,xonf或者config set修改配置
+通过redis.conf或者config set修改配置
 
 
 
@@ -143,6 +138,8 @@ Redis 命令用于在 redis 服务上执行操作。要在 redis 服务上执行
 | randomkey              | 随机返回一个key               |
 | rename key newName     | 重命名                        |
 
+* 如何给一个可以设置过期时间
+
 **keys**
 
 Supported glob-style patterns:
@@ -152,6 +149,8 @@ Supported glob-style patterns:
 - `h[ae]llo` matches `hello` and `hallo,` but not `hillo`
 - `h[^e]llo` matches `hallo`, `hbllo`, ... but not `hello`
 - `h[a-b]llo` matches `hallo` and `hbllo`
+
+
 
 
 
@@ -385,9 +384,59 @@ sorted set，有序的set，**每个元素会关联一个分数，根据分数�
 
 
 
+## Bitmap
+
 
 
 ## HyperLogLog
+
+
+
+# 配置文件
+
+* 大小写不敏感
+* 1k与1kb的区别
+* include 路径，可以包含其他配置文件
+
+
+
+**通用配置**
+
+`daemonize yes`  后台运行
+
+`pidFile filePath`   pidfile保存进程号
+
+`loglevel notice` 设置日志级别
+
+`logfile `默认为空，可以设置日志输出目录
+
+`database 0` redis有16个库，默认使用0
+
+`requirepass `默认没有密码
+
+`maxmemory ` **必须设置**，否则占满内存，导致服务器宕机
+
+`maxmemory-policy` redis淘汰策略
+
+`maxmemory-samples` 设置样本数量，LRU算法和TTL算法都是估算值，可以设置样本数据
+
+
+
+**连接**
+
+`bind ip`  只能通过指定的ip连接
+
+`protected-mode yes` 默认yes，表示远程不能访问
+
+`port 6379` 端口号默认6379
+
+`tcp-backlog 511`  backlog是一个连接队列=已连接和正在连接的总和
+
+`timeout 0` 多久没有操作会断开连接，0表示无限制，单位s
+
+`tcp-keepalive 300`  超时释放tcp连接
+
+`limits 10000` 客户端最大连接数，默认10000
 
 
 
@@ -403,14 +452,29 @@ Redis 客户端可以订阅任意数量的频道
 
 
 
+**频道**
+
+
+
+***订阅频道***
+
 ```bash
-# 创建频道
-SUBSCRIBE 名称
+SUBSCRIBE 频道名
 ```
 
+订阅后可以获得频道中的所有消息(包括之前发布的)
+
+**向频道中发送消息***
+
+```bash
+publish 频道名 消息
+```
+
+返回订阅者数量
 
 
 
+**先发布，再订阅，也受到了之前发布的消息**
 
 
 
@@ -434,7 +498,9 @@ save命令用来创建当前数据库的备份，会在redis的安装目录下�
 
 
 
+# 管道
 
+Redis是一种基于客户端-服务端模型以及请求/响应协议的TCP服务。Redis 管道技术可以在服务端未响应时，客户端可以继续向服务端发送请求，并最终一次性读取所有服务端的响应。
 
 
 
