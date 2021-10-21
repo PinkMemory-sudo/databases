@@ -1,3 +1,63 @@
+
+
+安装
+
+
+
+```
+docker pull redis:5.0.7
+```
+
+
+
+
+
+[Redis配置文件](http://download.redis.io/redis-stable/redis.conf)
+
+
+
+```
+docker run -p 6379:6379 --name redis -v /Users/chenguanlin/Documents/workspace/redis/conf/reids.conf:/etc/redis/redis.conf -v /Users/chenguanlin/Documents/workspace/redis/data:/data -d 7eed8df88d3b redis-server /etc/redis/redis.conf --appendonly yes
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Basic Conscept
 
 
