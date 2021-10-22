@@ -14,16 +14,16 @@ public class BSTest {
     /**
      * 十分钟内只能提交3次
      */
-    @Test
-    public void submit() {
-        String userId = "1";
-        String key = userId + "_submit";
-        if (redisTemplate.hasKey(key)){
-
-        }else {
-            // todo 提交操作
-            redisTemplate.opsForValue().
-        }
-
-    }
+//    @Test
+//    public void submit() {
+//        String userId = "1";
+//        String key = userId + "_submit";
+//        if (redisTemplate.hasKey(key)){
+//
+//        }else {
+//            // todo 提交操作
+//            redisTemplate.opsForValue().
+//        }
+//
+//    }
 }

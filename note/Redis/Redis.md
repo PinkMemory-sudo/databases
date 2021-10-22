@@ -18,8 +18,8 @@ docker pull redis:5.0.7
 
 ```bash
 docker run -p 6379:6379 --name redis \
--v /home/chenguanlin/redis/conf/redis.conf:/etc/redis/redis.conf \
--v /home/chenguanlin/redis/data:/data -d 7eed8df88d3b \
+-v /Users/chenguanlin/Documents/workspace/redis/conf/redis.conf:/etc/redis/redis.conf \
+-v /Users/chenguanlin/Documents/workspace/redis/data:/data -d 7eed8df88d3b \
 redis-server /etc/redis/redis.conf --appendonly yes
 ```
 
@@ -388,6 +388,97 @@ sorted set，有序的set，**每个元素会关联一个分数，根据分数�
 
 
 
+**新添加的类型**
+
+本身是字符串，只不过能进行位操作。可以当成是由01组成的数据，数组的下标叫做偏移量。
+
+使用偏移量来作为key，偏移量对应的值作为value，用来节省存储时间。
+
+key为数字，value只有01两种状态
+
+
+
+**使用场景**
+
+* 适合key连续的
+
+**示例**
+
+某用户id,是否开通了该功能。
+
+用户的id作为偏移量，开通为1，未开通为0
+
+
+
+| 命令                      | 描述                       |
+| ------------------------- | -------------------------- |
+| `setbit key offset value` | 将offset对应的bit设置为key |
+| `getbit key offset`       | 获得offset对应bit值        |
+| `bitcount key`            | 统计bit为1的数量           |
+|                           |                            |
+
+
+
+**bitop**
+
+在多个key中执行位操作将结果存储到目标key。
+
+支持四种操作：AND, OR, XOR,NOT
+
+`BITOP AND destkey srckey1 srckey2 srckey3 ... srckeyN`
+
+`BITOP OR destkey srckey1 srckey2 srckey3 ... srckeyN`
+
+`BITOP XOR destkey srckey1 srckey2 srckey3 ... srckeyN`
+
+`BITOP NOT destkey srckey`
+
+not命令只有一个输入的key，因为它的作用是将bit反转而不是和其他key参与运算
+
+The result of the operation is always stored at `destkey`
+
+进行复合操作时，长度不一样会使用0填充，返回的key的值的长度=最长的长度。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ## HyperLogLog
 
 
@@ -658,10 +749,6 @@ Redis是一种基于客户端-服务端模型以及请求/响应协议的TCP服�
 # 搭建redis集群
 
 集群：服务器，节点
-
-
-
-
 
 
 
