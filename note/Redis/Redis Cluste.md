@@ -157,85 +157,117 @@ sentinel monitor mymaster 主节点ip 主节点端口 2
 
 
 
-## 集群模式
-
-就是将多个一主多从模式联系起来
-
-
-
-## consistency guarantees
-
-Redis Cluster is not able to guarantee strong consistency. 
-
-原因：异步复制，不会等复制完才返回，而是写到主节点就返回，如果这时候主节点发生了故障，从节点提升到了主节点，就会导致数据不一致。
-
-- Your client writes to the master B.
-- The master B replies OK to your client.
-- The master B propagates the write to its slaves B1, B2 and B3.
-
-redis cluster支持同步复制，但是性能会大大降低
-
-
-
-## Redis集群配置参数
-
-
-
-**cluster-enabled**
-
-yes/no,启用集群
-
-
-
-**cluster-config-file `<filename>`**
-
-
-
-该文件不由我们编写，而是有redis cluster生成，变化时自动同步，该文件列出了集群中的其他节点、它们的状态、持久变量等等
-
-
-
-**cluster-node-timeout `<milliseconds>`**
-
-集群节点超时时间，超时就是失败
-
-
-
-**cluster-slave-validity-factor **`<factor>`
-
-从节点有效因子，超过这个时间将不会再升级成主节点
-
-timeout*factor
-
-
-
-**cluster-migration-barrier** `<count>`
-
-主节点保持连接的从节点最小数量，一个从节点的主节点至少另外还有count个可用的从节点时，才可能将这个从节点分配给其他主节点。
-
-默认为1，涉及到节点的分配，建议使用默认值1
-
-
-
-**cluster-require-full-coverage** `yes/no`
-
-集群不完整时是否停止写操作(默认yes)
-
-
-
-**cluster-allow-reads-when-down**
 
 
 
 
 
-# 创建redis集群
+
+# 主从复制
 
 
 
-## 使用Redis-cli创建集群
+## 哨兵模式
 
-1. 首先需要运行一些空的 Redis 实例(集群模式，而不是普通模式，来开启redis的集群特性和命令)
+
+
+
+
+# Redia-cluster
+
+
+
+**参考**：
+
+从用户角度描述redis-cluster的行为：[Redis cluster tutorial](https://redis.io/topics/cluster-tutorial)
+
+Redis-cluster算法和设计的细节：[Redis cluster specification](https://redis.io/topics/cluster-spec)
+
+
+
+## BasicConcepts
+
+
+
+**为什么使用cluster，主从复制不行吗**
+
+* 一个节点存不下整个数据，redis自动拆分，存储到多个节点上去
+* 提高并发写的性能，主从复制只能在主节点(只有一个)上写
+* cluster相当于多个主从复制组合起来，一个主从复制负责一部分hash槽
+
+
+
+**redis需要两个tcp端口**
+
+* 一个端口用来接收客户端请求，如6379
+* 一个客户端作为cluster的bus port进行节点间的通信、故障检测、配置更新等。一般再加上10000，如16379
+* 确保防火墙开放这两个端口
+
+
+
+**Data sharding**
+
+Redis集群中有16384个hash槽，集群中每个节点负责一部分hash槽。根据key计算出它所属的hash槽，找到对应的节点。可以通过重新分配hash槽来添加或删除节点，并且不需要停机。
+
+
+
+**hash tags**
+
+`if there is a substring between {} brackets in a key, only what is inside the string is hashed`
+
+hashtags允许用key的子串来精算hash槽，当一个key包含{}时，就只是有{}中的字符串进行hash计算{可以修改hash_tag配置，使用其他标记}。hash tags用来保证多个key被分配到同一个hash槽中，以此来保证与mset，keys类似的多key操作。
+
+
+
+**Redis Cluster master-replica model**
+
+一个主节点失败后，从节点可以晋升成主节点，主节点和它的从节点都失败时，集群无法再继续进行。
+
+
+
+**Redis Cluster consistency guarantees**
+
+集群无法保证强一致性，集群是异步写的，客户端发送写操作到主节点，主节点回复OK，并且同步到它的副本，而不是同步到副本后再回复客户端。这时候主节点失败，没有同步到副本，副本晋升成主节点，写的这部分数据就丢失了。
+
+通常需要在一致性和性能之间做出一个权衡。
+
+Redis 集群支持在需要时进行同步写操作，通过 WAIT 命令实现。这使得写失败的可能性大大降低。但是，即使使用同步复制，Redis Cluster 也不能实现强一致性。
+
+`network partition 由于网络设备的failure，造成网络分裂为多个独立的组`,出现network partition时，集群分成两半，一般可达，客户在一办进行写操作，当网络恢复时，另一半由于主节点超时，又选出一个主节点，此时主节点会变成从节点，客户写的数据就丢失了。
+
+
+
+**集群参数配置**
+
+```
+# no表示作为独立的实例启动
+cluster-enabled yes
+# 这不是一个用户可编辑的配置文件，持久化集群配置有变化会自动刷新
+cluster-config-file <filename>
+cluster-node-timeout <milliseconds>
+# 默认yes，no时，如果hash槽不完整集群仍然可进行读操作
+cluster-require-full-coverage <yes/no>
+```
+
+
+
+## 手动搭建Redis-cluster
+
+* 需要redis3.0及以上的版本
+
+
+
+1. **创建6个redis实例**
+
+*创建6个文件夹*
+
+```bash
+mkdir cluster-test/{7000,7001,7002,7003,7004,7005}
+```
+
+每个目录下创建一个redis.conf文件
+
+首先需要运行一些空的 Redis 实例(集群模式，而不是普通模式，来开启redis的集群特性和命令)
 
 ```
 port 7000
@@ -255,34 +287,12 @@ Note that the **minimal cluster** that works as expected requires to contain at 
 
 
 
-创建6个文件夹
-
-```bash
-mkdir cluster-test
-cd cluster-test
-mkdir 7000 7001 7002 7003 7004 7005
-```
-
-每个目录下创建一个redis.conf文件
-
-```
-port 7000
-cluster-enabled yes
-cluster-config-file nodes.conf
-cluster-node-timeout 5000
-appendonly yes
-```
-
-
-
-启动六个实例
+*启动六个实例*
 
 ```
 cd 7000
 ../redis-server ./redis.conf
 ```
-
-
 
 第一次启动没有nodes.conf 文件，每个节点都为自己分配一个新的 ID。
 
@@ -290,11 +300,11 @@ cd 7000
 [82462] 26 Nov 11:56:55.329 * No cluster configuration found, I'm 97a3a64667477371c4479320d683e4c8db5858b1
 ```
 
-集群根据ID来标识，节点的ip和端口会变，但是ID不会，
+集群根据ID来标识，节点的ip和端口会变，但是ID不会，这个 ID 将被这个特定实例永远使用，以便该实例在集群的上下文中具有唯一的名称。
 
 
 
-创建集群
+2. **用启动的redis的host和port创建集群**
 
 现在只是有一些运行的redis实例了，而我们要通过向节点中写入一些配置来创建我们的集群。
 
@@ -316,7 +326,9 @@ redis-cli --cluster create 127.0.0.1:7000 127.0.0.1:7001 \
 [OK] All 16384 slots covered
 ```
 
-**连接集群**
+
+
+3. **连接集群**
 
 集群是去中心化配置，可以根据任何节点连接到集群(加上-c参数)
 
@@ -326,7 +338,9 @@ redis-cli --cluster create 127.0.0.1:7000 127.0.0.1:7001 \
 
 
 
-## 使用redis-cluster创建集群
+## create-Cluster脚本创建Redis集群
+
+
 
 reids的utils/create-cluster 目录下的create-cluster脚本
 
@@ -338,6 +352,31 @@ create-cluster create
 第一个节点默认从端口30001开始
 
 
+
+## 用docker搭建redis集群
+
+
+
+`in order to make Docker compatible with Redis Cluster you need to use the **host networking mode** of Docker.`
+
+ redis 5.0 版本以后，就只能通过 redis-cli 来实现。
+
+
+
+ 因为redis集群的节点选举方式是需要半数以上的master通过，所以建议创建奇数个节点 ，集群中至少有奇数个节点，所以至少是三个节点，每个节点再配置一个副本，一个集群就至少需要6个redis实例。
+
+
+
+通过一个节点，将其他节点加入集群(PING-PONG)
+
+通过一个节点新建一个节点，两个节点握手成功后，通过Gossip协议添加到其他节点
+
+
+
+1. 开启节点
+2. 添加到集群
+3. 分配槽(槽都被分配后集群才是上线状态，有槽下线则集群就会出于下线状态)，每个节点负责一段哈希槽
+4. 添加从节点
 
 
 
@@ -355,16 +394,6 @@ create-cluster create
 
 * 同一哈希槽的key才能进行批量操作
 * 不支持多数据库，单机下的Redis可以支持16个数据库，但集群之只能使用一个数据库空间，即db 0
-
-
-
-# 原理
-
-
-
-**哈希槽**
-
-16384个插槽，每个主节点分一部分hash槽，redis会根据key计算出属于哪个hash槽，然后去对应的节点执行操作。
 
 
 
@@ -399,29 +428,6 @@ create-cluster create
 * 一个主机和他的从机都挂掉时，集群还能不能工作？
 
 
-
-## 用docker搭建redis集群
-
-
-
- redis 5.0 版本以后，就只能通过 redis-cli 来实现。
-
-
-
- 因为redis集群的节点选举方式是需要半数以上的master通过，所以建议创建奇数个节点 ，集群中至少有奇数个节点，所以至少是三个节点，每个节点再配置一个副本，一个集群就至少需要6个redis实例。
-
-
-
-通过一个节点，将其他节点加入集群(PING-PONG)
-
-通过一个节点新建一个节点，两个节点握手成功后，通过Gossip协议添加到其他节点
-
-
-
-1. 开启节点
-2. 添加到集群
-3. 分配槽(槽都被分配后集群才是上线状态，有槽下线则集群就会出于下线状态)，每个节点负责一段哈希槽
-4. 添加从节点
 
 
 
