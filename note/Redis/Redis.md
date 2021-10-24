@@ -84,10 +84,6 @@ Redis支持多个数据库，并且每个数据库的数据是隔离的不能共
 
 
 
-# 常用命令
-
-
-
 ## Redis客户端
 
 **获得所有配置项**
@@ -170,11 +166,9 @@ string 类型是二进制安全的。意思是 redis 的 string 可以包含任�
 
 
 
-常用的操作
+**常用的操作**
 
-
-
-赋值
+1. 赋值
 
 赋值，赋值并返回旧值，赋值并设置过期时间，同时添加多个键值对，key不存在时才赋值，存在时追加赋值
 
@@ -388,7 +382,7 @@ sorted set，有序的set，**每个元素会关联一个分数，根据分数�
 
 
 
-**新添加的类型**
+**不是一种数据类型**
 
 本身是字符串，只不过能进行位操作。可以当成是由01组成的数据，数组的下标叫做偏移量。
 
@@ -400,7 +394,7 @@ key为数字，value只有01两种状态
 
 **使用场景**
 
-* 适合key连续的
+* 适合key连续的，活跃的
 
 **示例**
 
@@ -421,17 +415,15 @@ key为数字，value只有01两种状态
 
 **bitop**
 
-在多个key中执行位操作将结果存储到目标key。
+支持四种操作：AND, OR, XOR,NOT。按位操作后保存到另一个key中
 
-支持四种操作：AND, OR, XOR,NOT
+***按位与：***`BITOP AND destkey srckey1 srckey2 srckey3 ... srckeyN`
 
-`BITOP AND destkey srckey1 srckey2 srckey3 ... srckeyN`
+***按位或：***`BITOP OR destkey srckey1 srckey2 srckey3 ... srckeyN`
 
-`BITOP OR destkey srckey1 srckey2 srckey3 ... srckeyN`
+***按位异或：***`BITOP XOR destkey srckey1 srckey2 srckey3 ... srckeyN`
 
-`BITOP XOR destkey srckey1 srckey2 srckey3 ... srckeyN`
-
-`BITOP NOT destkey srckey`
+***按位取反：***`BITOP NOT destkey srckey`
 
 not命令只有一个输入的key，因为它的作用是将bit反转而不是和其他key参与运算
 
@@ -441,49 +433,44 @@ The result of the operation is always stored at `destkey`
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ## HyperLogLog
 
 
 
-# 配置文件
+**基数问题**
+
+求集合中不重复的元素的个数的问题
+
+
+
+只花费12k的内存，就能计算出2^64个不同元素的基数，只根据输入的元素来计算基数，而不存储元素本身
+
+
+
+| 命令·                           | 描述                                          |
+| ------------------------------- | --------------------------------------------- |
+| pfadd key  values               | 不重复返回1，重复返回0                        |
+| pfcount key[key1,key2...]       | 查看key对应的基数,还可以查看多个key组成的基数 |
+| pfmerge destkey srckey1 srckey2 | 合并                                          |
+
+
+
+## GEO
+
+3.2中新增堆GEO数据的支持。geographic，就是该元素的二维坐标
+
+
+
+| 命令                              | 描述                                           |
+| --------------------------------- | ---------------------------------------------- |
+| geoadd key x y name[key x y name] | 将name的经纬度添加到key中                      |
+| geopos key name                   | 将key中name的经纬度取出来                      |
+| geodist key name1 name2 [unit]    | 获得两点的直线距离，单位默认m,此外还有km,mi,ft |
+| georadius key x y radius unit     | 获得指定坐标指定范围内的name                   |
+
+
+
+## 配置文件
 
 * 大小写不敏感
 * 1k与1kb的区别
@@ -533,7 +520,7 @@ The result of the operation is always stored at `destkey`
 
 
 
-# 发布订阅
+## 发布订阅
 
 
 
@@ -589,7 +576,7 @@ save命令用来创建当前数据库的备份，会在redis的安装目录下�
 
 
 
-# 管道
+## 管道
 
 **Pipeline**
 
@@ -612,6 +599,10 @@ Redis 管道技术可以在服务端未响应时，客户端可以继续向服�
 
 
 
+
+# Jedis
+
+Java客户端，就如MySQL与JDBC的关系。
 
 
 
@@ -762,15 +753,398 @@ Redis 管道技术可以在服务端未响应时，客户端可以继续向服�
 
 
 
-# 搭建redis集群
+# 持久化
 
-集群：服务器，节点
-
-
-
+* 流程
+* 触发时机
 
 
 
+Redis是基于内存的数据库，同时会定期的将数据持久化，保证重启时数据不丢失。
+
+Redis提供类两种持久化方案：RDB和AOF
+
+
+
+## RDB
+
+Redis Database
+
+根据指定的时间间隔，将内存中的数据集快照写入磁盘，恢复时是将快照文件直接读取到内存。默认就有rdb的持久化
+
+
+
+**备份流程**
+
+Redis会单独fork一个子进程来进行持久化，先将数据写入到一个临时文件中，当持久化过程结束后，用该临时文件替换成上次持久化的文件(dump.rdb)。整个过程中，主进程不进行任何IO操作。
+
+
+
+**使用**
+
+配置文件
+
+```
+dbfilename dump.rdb
+dir ./
+# 无法写入磁盘是，关闭redis的写操作
+stop-writes-on-bgsave-error yes
+rdbcompression yes
+# 校验快照，会影响性能
+rdbchecksum yes
+# 指定时间间隔，至少达到指定次数才会进行持久化
+save seconds changes
+```
+
+
+
+**恢复**
+
+将rdb文件放到dir目录中，文件名为dbfilename
+
+
+
+## AOF
+
+Append Only FIle
+
+将每个操作追加到日志中(不记录读操作)，重启后将日志中的命令重新执行一次
+
+**AOF默认不开启**
+
+配置
+
+```
+appendonly no
+appendfilename "appendlonly.aof"
+dir ./
+```
+
+同步频率配置
+
+```
+# 每次
+appendfync alwys
+# 每秒
+appendfsync everysec
+# 不主动同步，把同步时机交给操作系统
+appendfsync no
+```
+
+
+
+
+
+**流程**
+
+* 客户端的请求命令被append到AOF缓冲区中
+* AOF缓冲区根据持久化策略，将操作sync到磁盘
+* AOF文件大小超过重写策略或手动重写时，对AOF文件rewrite重写，压缩AOF文件
+* 重启时，重新执行AOF记录的写操作
+
+
+
+**rewite压缩**
+
+AOF文件时追加的，文件会越来越大。rewite压缩会对文件中的命令进行筛选，比如进行ABA操作时只会保留一个A，只关注最后的结果。重写也是fork一个子进程进行操作，与rdb类似。
+
+**触发条件：**
+
+
+
+
+
+**异常恢复**
+
+如果遇到AOF文件损坏，可以通过`redis-check-aof --fix appendonly.aof`进行恢复
+
+
+
+## RDB与AOF的对比
+
+* RDB最后一次持久化的数据可能会丢失，适合对一致性不高的情况下
+* 两者都开启时，aof文件的优先级高
+
+
+
+## **最佳实践**
+
+官方推荐两者一起使用，对数据一致性不敏感可以使用rdb，不建议单独使用aof，而如果只是错纯缓存，两者可以都不用。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# 主从复制
+
+* 什么时主从复制
+
+* 为什么使用主从复制，优势是什么
+
+* 有什么缺点，要注意什么问题
+* 主机挂掉或从机挂掉会有什么后果
+
+
+
+**什么是主从复制**
+
+一个master用来进行写操作，master将数据同步到多个slave，slave  用来进行读操作
+
+
+
+**为什么要使用主从模式**
+
+* 使用主从复制实现读写分离，提高性能
+
+* 容灾快速恢复
+
+
+
+**主服务器和从服务器都可以干什么**
+
+
+
+
+
+**怎么使用**
+
+
+
+
+
+缺点：
+
+复制延时
+
+
+
+## 搭建
+
+
+
+修改配置文件
+
+可以将基础的部分和主从复制的部分分开，然后用include合并
+
+```
+port 
+pidfile 
+dbfilename
+```
+
+
+
+```
+
+```
+
+`info replication` 查看redis主从复制信息
+
+
+
+配置一个一主两从
+
+* 创建3个redis实例
+* 登录一个redis，执行`slaveof host port`, 称为一个redis的从服务器
+* 相同做法再设置一个redis
+* 只能在主机中进行写操作，从机不能进行写操作
+
+
+
+
+
+**原理，流程**
+
+1. 从服务器连接到住服务器后，发送同步数据的命令，主服务器将当前数据持久化到rdb中发送给从服务器，从服务器读取到数据库中 
+2. 主服务器进行写操作后，将数据同步到从服务器中
+3. 薪火相传，一个从服务器下还可以再挂从服务器`slaveof host port`,将一个从服务器绑定到另一个从服务器。主服务器只需要同步到一个从服务器，从服务器传递同步数据。
+4. 反客为主，主服务器挂掉后，从服务器可以变成主服务器。从服务器执行`slave no one`
+5. 
+
+
+
+**从服务器出现故障**
+
+从服务器失败重启后，并不会再次加入主服务器，但是数据还在。它现在是一个独立的redis服务，还是需要手动执行`slaveof host prot`来加入主服务器。
+
+
+
+**主服务器出现故障**
+
+从服务器挂掉后，重启还是住服务器，从服务器不会进行任何改变，继续等住服务器回来
+
+
+
+
+
+## 哨兵模式
+
+
+
+**什么是哨兵模式**
+
+在主从复制下，主服务器挂掉后，从服务器不会做什么改变，从服务器挂掉后，重启时还需要手动再绑定到主服务器。**为了保证可用性**，在主服务器和从服务器上都加上哨兵来监控，达到自动化控制。
+
+哨兵模式是反客为主的自动版，能够后台监控主机是否故障，故障后根据投票数自动将从服务器变为主服务器，主服务器被设置为从服务器。
+
+哨兵模式已经集成在redis的2.4版本中了，是redis集群的解决方案，sentinel来监视master即它的slave
+
+
+
+**原理**
+
+1.  每个Sentinel频率向它所知的Master，Slave以及其他 Sentinel 实例发送一个PING命令。 
+2.  如果一个实例（instance）距离最后一次有效回复PING命令的时间超过 own-after-milliseconds 选项所指定的值，则这个实例会被Sentinel标记为主观下线 。
+3.  如果一个Master被标记为主观下线，则正在监视这个Master的所有 Sentinel 要确认Master的确进入了主观下线状态。 
+4.  当有足够数量的Sentinel（大于等于配置文件指定的值）在指定的时间范围内确认Master的确进入了主观下线状态，则Master会被标记为客观下线。 
+5. 
+
+
+
+**怎么使用哨兵模式**
+
+1. 新建配置文件：sentinel.conf
+
+```
+sentinel monitor mastername host port number
+```
+
+* mastername,给master起个名字
+* number，至少有number个从服务器的哨兵同意
+
+2. `redis-sentinel 配置文件` 来启动哨兵
+
+ Master-Slave切换后，master_redis.conf、slave_redis.conf和sentinel.conf的内容都会发生改变，即master_redis.conf中会多一行slaveof的配置，sentinel.conf的监控目标会随之调换。 
+
+
+
+**sentinel的持久化**
+
+
+
+
+
+**sentinel集群**
+
+
+
+
+
+**选举规则**
+
+1. 优先级高的(sentinel配置文件中，slave-priority 100,值越小，优先级越高)
+2. 偏移量小的(跟主服务器最相近的)
+3. runid(启动后自动生成)小的
+
+
+
+**设置优先级**
+
+
+
+
+
+ 
+
+
+
+# 集群
+
+
+
+* 与主从复制的区别
+* 为什么不适用主从复制
+
+
+
+**为什么要使用集群**
+
+* 一个服务器存不下所有数据，解决容量不够的问题
+* 并发的写操作只能在主服务器上执行
+
+
+
+**代理主机？**
+
+客户端不请求redis服务，而是通过代理服务器来请求。
+
+
+
+**去中心化配置**
+
+任何一个redis服务器都可以作为集群的入口
+
+
+
+**什么是集群**
+
+主从模式是将集群的一份数据往从服务器中复制了多分来实现读写分离。而集群是将一份数据分成多分，存储到多个redis节点，而每一份又可以又多个副本。 一个集群又相当于多个主从复制。
+
+* 将一份数据分成多分
+
+* 将一份数据复制多分
+
+
+
+**搭建**
+
+修改配置文件
+
+```
+cluster-enabled yes
+cluster-config-file xxx
+cluster-node-timeout 15000
+```
+
+创建六个redis实例
+
+加入集群`redis-cli `
+
+
+
+
+
+# 主从复制和集群的对比
 
 
 

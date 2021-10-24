@@ -2,7 +2,7 @@ Redis support
 
 Redis repositories
 
-
+* 哨兵模式和集群的使用
 
 工厂充当`PersistenceExceptionTranslator`对象
 
@@ -311,6 +311,7 @@ SpringDataRedis需要redis2.6及以上，集成了lettuce和jedis两个redis的J
 **添加依赖**
 
 ```xml
+
 ```
 
 
