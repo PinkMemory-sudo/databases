@@ -34,10 +34,10 @@ public class DBRefTest {
         home.setAddress("NewYork");
 
         User user = new User();
-        user.setId(UUID.randomUUID().toString());
-        user.setName("Jack");
-        user.setCompany(company);
-        user.setHome(home);
+//        user.setId(UUID.randomUUID().toString());
+//        user.setName("Jack");
+//        user.setCompany(company);
+//        user.setHome(home);
         mongo.save(user);
         mongo.save(company);
         mongo.save(home);

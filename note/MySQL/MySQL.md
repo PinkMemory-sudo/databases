@@ -619,6 +619,10 @@ show create database table_name
 
 
 
+ALTER TABLE warn ADD COLUMN batch_id varchar(24);
+
+
+
 **修改列**
 
 ```mysql
@@ -628,7 +632,7 @@ ALTER TABLE table_name CHANGE COLUMN 旧列名 [新列名] 类型 [约束];
 **添加列**
 
 ```mysql
-ALTER TABLE table_name ADD COLUMN 旧列名 [新列名] 类型 [约束];
+ALTER TABLE table_name ADD COLUMN 列名 类型 [约束];
 ```
 
 **删除列**

@@ -18,11 +18,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class User {
     @Id
-    @JsonIgnore
-    private String id;
     private String name;
-    @DBRef
-    private Company company;
-    @DBRef
-    private Home home;
+
+    private int age;
 }

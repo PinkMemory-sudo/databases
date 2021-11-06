@@ -1,4 +1,4 @@
-
+ 
 
 # 安装
 
@@ -108,7 +108,7 @@ Redis 命令用于在 redis 服务上执行操作。要在 redis 服务上执行
 | -------------------------------- | ------------------------------------------------------------ |
 | redis-cli -h host -p port        | 使用本机+默认端口时可以只写redis-cli                         |
 | auth password                    | 有密码时要认证                                               |
-| config requirepass 密码          | 设置密码，立即生效，修改配置文件中的requirepass需要重启redis |
+| config  set requirepass 密码     | 设置密码，立即生效，修改配置文件中的requirepass需要重启redis |
 | config get requirepass           | 查看密码                                                     |
 | reids-server -port 6379 配置文件 | 启动redis服务                                                |
 | ping                             | 用于检查redis服务是否启动                                    |

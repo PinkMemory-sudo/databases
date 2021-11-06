@@ -259,15 +259,13 @@ cluster-require-full-coverage <yes/no>
 
 1. **创建6个redis实例**
 
-*创建6个文件夹*
+***创建配置文件***
 
 ```bash
 mkdir cluster-test/{7000,7001,7002,7003,7004,7005}
 ```
 
 每个目录下创建一个redis.conf文件
-
-首先需要运行一些空的 Redis 实例(集群模式，而不是普通模式，来开启redis的集群特性和命令)
 
 ```
 port 7000
@@ -277,17 +275,15 @@ cluster-node-timeout 5000
 appendonly yes
 ```
 
-**cluster-enable**只是启用了redis的集群命令
+**cluster-enable**只是启用了redis的集群命令，集群模式，而不是普通模式，来开启redis的集群特性和命令
 
 **cluster-config-file**该节点的配置文件路径，启动时由redis集群生成，并由集群更新等
 
-Note that the **minimal cluster** that works as expected requires to contain at least three master nodes.
+`Note that the minimal cluster that works as expected requires to contain at least three master nodes.`
 
-再加上三个从节点，组成一个六节点的集群
+三个主节点再加上三个从节点，组成一个六节点的集群
 
-
-
-*启动六个实例*
+***启动六个实例***
 
 ```
 cd 7000
@@ -320,7 +316,7 @@ redis-cli --cluster create 127.0.0.1:7000 127.0.0.1:7001 \
 * --cluster-replicas 1设置从节点的数量
 * redis自动分配主服务器和从服务器，主服务器和从服务器会尽量保证不再一台机器上
 
-6. 运行成功的结果
+运行成功的结果
 
 ```
 [OK] All 16384 slots covered
@@ -333,8 +329,6 @@ redis-cli --cluster create 127.0.0.1:7000 127.0.0.1:7001 \
 集群是去中心化配置，可以根据任何节点连接到集群(加上-c参数)
 
 `redis-cli -c -h host -p port`
-
-
 
 
 
