@@ -679,10 +679,39 @@ mongodump -uroot -pMingjing_110 --authenticationDatabase admin \
 
 
 
+mongodump -uroot -pMingjing_110 --authenticationDatabase admin \
+-o /data/bak
+
+
+
+```
+docker run -itd --name mongo_test -p 8717:27017 0403397059c3 --auth
+```
+
+
+
+```
+db.createUser({ user:'root',pwd:'Mingjing_110',roles:[ { role:'userAdminAnyDatabase', db: 'admin'},"readWriteAnyDatabase"]});
+```
+
+mingjing_private_auth_server
+
+intention_target_db
+
+intention_private_db
+
+export_history
+
+
+
+mongorestore -uroot -pMingjing_110 --authenticationDatabase admin -d mingjing_private_auth_server /data/bak/mingjing_private_auth_server --drop
+
+
+
 导入
 
 ```
-mongorestore -uroot -pMingjing_110 --authenticationDatabase admin -d export_history /data/bak/bak/export_history
+mongorestore -uroot -pMingjing_110 --authenticationDatabase admin -d export_history /data/bak/export_history
 ```
 
 
@@ -703,13 +732,7 @@ mongoexport -h 10.0.0.152:27017 -uroot -proot --authenticationDatabase admin -d 
 
 
 
-mingjing_private_auth_server
 
-intention_target_db
-
-intention_private_db
-
-export_history
 
 
 
