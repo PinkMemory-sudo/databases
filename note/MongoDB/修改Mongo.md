@@ -5,8 +5,8 @@
 **备份user_ex_info表**
 
 ```
-mongodump -uroot -pMingjing_110 --authenticationDatabase admin \
--d mingjing_private_auth_server \
+mongodump -uroot -pxxx --authenticationDatabase admin \
+-d xxx_private_auth_server \
 -c user_ex_info \
 -o /data/bak
 ```
@@ -24,10 +24,10 @@ db.user_ex_info.remove({})
 2. 导入user_ex_info表
 
 ```
-mongorestore -uroot -pMingjing_110 --authenticationDatabase admin \
--d mingjing_private_auth_server \
+mongorestore -uroot -pxxx --authenticationDatabase admin \
+-d xxx_private_auth_server \
 -c user_ex_info \
-/data/bak/mingjing_private_auth_server/user_ex_info.bson
+/data/bak/xxx_private_auth_server/user_ex_info.bson
 ```
 
 
@@ -40,7 +40,7 @@ mongorestore -uroot -pMingjing_110 --authenticationDatabase admin \
 
 ```
 // 统计开通过智能预警的客户
-use mingjing_private_auth_server
+use xxx_private_auth_server
 // 保存开通过智能预警权限的客户名
 var warnAccountList=[]
 db.user_ex_info.find({"authorizedServices":"WARN"},{"_id":1}).forEach(
@@ -79,7 +79,7 @@ db.target_person.aggregate([
     }
 )
 
-use mingjing_private_auth_server
+use xxx_private_auth_server
 for (var i = warnAccountList.length - 1; i >= 0; i--) {
     accountName=warnAccountList[i]
     if (cmdLine[accountName]) {

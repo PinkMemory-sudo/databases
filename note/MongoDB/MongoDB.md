@@ -671,15 +671,15 @@ Mongo常见各节点的搭配为一主一从或一主多从，主节点处理客
 导出
 
 ```
-mongodump -uroot -pMingjing_110 --authenticationDatabase admin \
--d mingjing_private_auth_server \
+mongodump -uroot -pxxx --authenticationDatabase admin \
+-d xxx_private_auth_server \
 -c user_ex_info \
 -o /data/bak
 ```
 
 
 
-mongodump -uroot -pMingjing_110 --authenticationDatabase admin \
+mongodump -uroot -pxxx --authenticationDatabase admin \
 -o /data/bak
 
 
@@ -691,10 +691,10 @@ docker run -itd --name mongo_test -p 8717:27017 0403397059c3 --auth
 
 
 ```
-db.createUser({ user:'root',pwd:'Mingjing_110',roles:[ { role:'userAdminAnyDatabase', db: 'admin'},"readWriteAnyDatabase"]});
+db.createUser({ user:'root',pwd:'xxx',roles:[ { role:'userAdminAnyDatabase', db: 'admin'},"readWriteAnyDatabase"]});
 ```
 
-mingjing_private_auth_server
+xxx_private_auth_server
 
 intention_target_db
 
@@ -704,14 +704,14 @@ export_history
 
 
 
-mongorestore -uroot -pMingjing_110 --authenticationDatabase admin -d mingjing_private_auth_server /data/bak/mingjing_private_auth_server --drop
+mongorestore -uroot -pxxx --authenticationDatabase admin -d xxx_private_auth_server /data/bak/xxx_private_auth_server --drop
 
 
 
 导入
 
 ```
-mongorestore -uroot -pMingjing_110 --authenticationDatabase admin -d export_history /data/bak/export_history
+mongorestore -uroot -pxxx --authenticationDatabase admin -d export_history /data/bak/export_history
 ```
 
 
