@@ -701,15 +701,7 @@ POST /customer/external/_bulk?pretty
 
 
 
-## Cluster
 
-由多个节点共同提供功能，一个集群通过集群名唯一标识，节点通过集群名加入集群。ES默认的集群名是"elasticsearch"
-
-
-
-## node
-
-节点就是一个服务器，节点的标识符会在启动时分配一个UUID,也可以自定义节点名，相互可以发现的节点，如果集群名相同，就会自动形成一个集群，默认会加入一个名为"elasticsearch"的集群。
 
 
 
@@ -1902,7 +1894,7 @@ match_all
 
 match 	会对搜索内容分词
 
-match_phrase	不会对搜索内容进行分词
+match_phrase	
 
 range query 
 
